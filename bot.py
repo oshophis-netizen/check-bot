@@ -52,6 +52,29 @@ DOCUMENT_WARNING = (
     "лучше просто напиши текстом, что хочешь обсудить."
 )
 
+SENSITIVE_INPUT_PATTERNS = [
+    re.compile(pattern, re.I)
+    for pattern in (
+        r"\b(?:password|pass|пароль)\s*[:=]\s*\S+",
+        r"\b(?:api[_-]?key|token|secret|ключ)\s*[:=]\s*[A-Za-z0-9_\-:.]{8,}",
+        r"\b\d{5,8}\b.*\b(?:код|code|2fa|otp|sms)\b",
+        r"\b(?:код|code|2fa|otp|sms)\b.*\b\d{5,8}\b",
+        r"\b(?:seed phrase|mnemonic|сид фраз|мнемоническ)\b",
+        r"\b(?:экспорт аккаунта|export as file|telegram export|nicegram export)\b",
+        r"\b(?:recovery phrase|private key|приватн(?:ый|ого)\s+ключ)\b",
+    )
+]
+
+UNSAFE_REPLY_PATTERNS = [
+    re.compile(pattern, re.I)
+    for pattern in (
+        r"\b(?:пришли|отправь|скинь|дай|введи|напиши)\b.{0,40}\b(?:пароль|password|pass)\b",
+        r"\b(?:пришли|отправь|скинь|дай|введи|напиши)\b.{0,40}\b(?:код|code|2fa|otp|sms)\b",
+        r"\b(?:пришли|отправь|скинь|дай|введи|напиши)\b.{0,60}\b(?:token|api[_-]?key|secret|ключ)\b",
+        r"\b(?:пришли|отправь|скинь|загрузи)\b.{0,60}\b(?:экспорт|export|файл аккаунта|seed phrase|private key)\b",
+    )
+]
+
 @dataclass
 class UserState:
     user_id: int
@@ -90,6 +113,14 @@ def clean_model_text(text: str) -> str:
     if len(text) > 700:
         text = text[:700].rsplit(" ", 1)[0].strip()
     return text
+
+
+def contains_sensitive_input(text: str) -> bool:
+    return any(pattern.search(text) for pattern in SENSITIVE_INPUT_PATTERNS)
+
+
+def violates_reply_policy(text: str) -> bool:
+    return any(pattern.search(text) for pattern in UNSAFE_REPLY_PATTERNS)
 
 
 def detect_sentiment(text: str) -> str:
@@ -338,6 +369,9 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         text = update.message.text.strip()
         if not text:
             return
+        if contains_sensitive_input(text):
+            await update.message.reply_text(DOCUMENT_WARNING)
+            return
         state = await get_user_state(user_id, update.effective_user.first_name or "")
         state.last_seen = utc_now()
         state.msg_count += 1
@@ -346,6 +380,9 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
         await natural_delay(update, text)
         reply = await generate_reply(state, text)
+        if violates_reply_policy(reply):
+            log.warning("Blocked unsafe model reply for user_id=%s", user_id)
+            reply = DOCUMENT_WARNING
 
         state.history.append({"role": "user", "content": text[:1000]})
         state.history.append({"role": "assistant", "content": reply[:1000]})

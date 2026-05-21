@@ -55,10 +55,14 @@ DOCUMENT_WARNING = (
 SENSITIVE_INPUT_PATTERNS = [
     re.compile(pattern, re.I)
     for pattern in (
-        r"\b(?:password|pass|пароль)\s*[:=]\s*\S+",
-        r"\b(?:api[_-]?key|token|secret|ключ)\s*[:=]\s*[A-Za-z0-9_\-:.]{8,}",
-        r"\b\d{5,8}\b.*\b(?:код|code|2fa|otp|sms)\b",
-        r"\b(?:код|code|2fa|otp|sms)\b.*\b\d{5,8}\b",
+        r"\b(?:password|pass|пароль)\b\s*(?:[:=]|это|is|мой|my)\s*[^\s,;]{4,}",
+        r"\b(?:password|pass|пароль)\b\s+(?=[^\s,;]*(?:\d|[^\wа-яё]))[^\s,;]{4,}",
+        r"\b(?:password|pass|пароль)\b\s+[A-Za-z0-9_\-:.]{10,}",
+        r"\b(?:api[_-]?key|api\s+key|token|secret|токен|ключ)\b\s*(?:[:=]|это|is|мой|my)\s*[A-Za-z0-9_\-:.]{6,}",
+        r"\b(?:api[_-]?key|api\s+key|token|secret|токен|ключ)\b\s+(?=[A-Za-z0-9_\-:.]*(?:\d|[_\-:.]))[A-Za-z0-9_\-:.]{6,}",
+        r"\b(?:api[_-]?key|api\s+key|token|secret|токен|ключ)\b\s+[A-Za-z0-9_\-:.]{16,}",
+        r"\b\d{4,8}\b.{0,24}\b(?:код|code|2fa|otp|sms)\b",
+        r"\b(?:код|code|2fa|otp|sms)\b.{0,24}\b\d{4,8}\b",
         r"\b(?:seed phrase|mnemonic|сид фраз|мнемоническ)\b",
         r"\b(?:экспорт аккаунта|export as file|telegram export|nicegram export)\b",
         r"\b(?:recovery phrase|private key|приватн(?:ый|ого)\s+ключ)\b",
@@ -68,10 +72,11 @@ SENSITIVE_INPUT_PATTERNS = [
 UNSAFE_REPLY_PATTERNS = [
     re.compile(pattern, re.I)
     for pattern in (
-        r"\b(?:пришли|отправь|скинь|дай|введи|напиши)\b.{0,40}\b(?:пароль|password|pass)\b",
-        r"\b(?:пришли|отправь|скинь|дай|введи|напиши)\b.{0,40}\b(?:код|code|2fa|otp|sms)\b",
-        r"\b(?:пришли|отправь|скинь|дай|введи|напиши)\b.{0,60}\b(?:token|api[_-]?key|secret|ключ)\b",
-        r"\b(?:пришли|отправь|скинь|загрузи)\b.{0,60}\b(?:экспорт|export|файл аккаунта|seed phrase|private key)\b",
+        r"\b(?:пришли|отправь|скинь|дай|введи|напиши|скажи)\b.{0,60}\b(?:парол\w*|password|pass|код|code|2fa|otp|sms|token|api[_-]?key|api\s+key|secret|токен|ключ)\b",
+        r"\b(?:парол\w*|password|pass|код|code|2fa|otp|sms|token|api[_-]?key|api\s+key|secret|токен|ключ)\b.{0,60}\b(?:пришли|отправь|скинь|дай|введи|напиши|скажи)\b",
+        r"\b(?:какой|какая|какие|можешь|можно|нужен|нужна|нужно|понадобится)\b.{0,60}\b(?:парол\w*|password|pass|код|code|2fa|otp|sms|token|api[_-]?key|api\s+key|secret|токен|ключ)\b",
+        r"\b(?:парол\w*|password|pass|код|code|2fa|otp|sms|token|api[_-]?key|api\s+key|secret|токен|ключ)\b.{0,60}\?",
+        r"\b(?:пришли|отправь|скинь|загрузи|дай|нужен|нужна|нужно)\b.{0,60}\b(?:экспорт|export|файл аккаунта|seed phrase|private key|recovery phrase)\b",
     )
 ]
 

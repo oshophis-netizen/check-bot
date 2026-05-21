@@ -60,7 +60,7 @@ SENSITIVE_INPUT_PATTERNS = [
         r"\b(?:password|pass|пароль)\b\s+[A-Za-z0-9_\-:.]{10,}",
         r"\b(?:api[_-]?key|api\s+key|token|secret|токен|ключ)\b\s*(?:[:=]|это|is|мой|my)\s*[A-Za-z0-9_\-:.]{6,}",
         r"\b(?:api[_-]?key|api\s+key|token|secret|токен|ключ)\b\s+(?=[A-Za-z0-9_\-:.]*(?:\d|[_\-:.]))[A-Za-z0-9_\-:.]{6,}",
-        r"\b(?:api[_-]?key|api\s+key|token|secret|токен|ключ)\b\s+[A-Za-z0-9_\-:.]{16,}",
+        r"\b(?:api[_-]?key|api\s+key|token|secret|токен|ключ)\b\s+[A-Za-z0-9_\-:.]{6,}",
         r"\b\d{4,8}\b.{0,24}\b(?:код|code|2fa|otp|sms)\b",
         r"\b(?:код|code|2fa|otp|sms)\b.{0,24}\b\d{4,8}\b",
         r"\b(?:seed phrase|mnemonic|сид фраз|мнемоническ)\b",
@@ -121,6 +121,7 @@ def clean_model_text(text: str) -> str:
 
 
 def contains_sensitive_input(text: str) -> bool:
+    text = re.sub(r"\btoken\s+bucket\b", " ", text, flags=re.I)
     return any(pattern.search(text) for pattern in SENSITIVE_INPUT_PATTERNS)
 
 
